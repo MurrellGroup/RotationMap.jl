@@ -12,8 +12,8 @@ function rotation(A::AbstractMatrix)
     A = reshape(A, 3, 3, :)
     U, _, V = batchedsvd(A)
     ν = batchedsigndet(A)
-    # U * (-νI) * V'
-    U .*= reshape(ν, 1, 1, :)
+    # U * diagm([1, 1, ν]) * V'
+    U[:,3,:] .*= reshape(ν, 1, :)
     batched_mul(U, batched_transpose(V))
 end
 
@@ -29,20 +29,24 @@ function ChainRulesCore.rrule(::typeof(rotation), A::AbstractMatrix)
     ν = batchedsigndet(A)
     function rotation_pullback(R̄)
         R̄ = unthunk(R̄)
-        # ∂A = U * (νG .* (K - K')) * V'
+        # ∂A = U * (G .* (K - K')) * diagm([1, 1, ν]) * V'
         # where K = U'R̄*V and
-        #       G[i,j] = i == j ? 0 : inv(s[i] + s[j])
-        νG = zeros(3, 3, size(A, 3))
-        νG[1,2,:] .= νG[2,1,:] .= inv.(s[1,:] .+ s[2,:])
-        νG[1,3,:] .= νG[3,1,:] .= inv.(s[1,:] .+ s[3,:])
-        νG[2,3,:] .= νG[3,2,:] .= inv.(s[2,:] .+ s[3,:])
-        νG .*= reshape(ν, 1, 1, :)
+        #       G[i,j] = i == j ? 0 : inv(s[i] + ν*s[j])
+        G = zero(A)
+        G[1,2,:] .= inv.(s[2,:] .+ s[1,:])
+        G[1,3,:] .= inv.(s[3,:] .+ ν .* s[1,:])
+        G[2,1,:] .= inv.(s[1,:] .+ s[2,:])
+        G[2,3,:] .= inv.(s[3,:] .+ ν .* s[2,:])
+        G[3,1,:] .= inv.(s[1,:] .+ ν .* s[3,:])
+        G[3,2,:] .= inv.(s[2,:] .+ ν .* s[3,:])
         K = batched_mul(batched_mul(batched_transpose(U), R̄), V)
-        ∂A = batched_mul(batched_mul(U, νG .* (K .- batched_transpose(K))), batched_transpose(V))
+        H = G .* (K .- batched_transpose(K))
+        H[:,3,:] .*= reshape(ν, 1, :)
+        ∂A = batched_mul(batched_mul(U, H), batched_transpose(V))
         ChainRulesCore.NoTangent(), reshape(∂A, 9, :)
     end
-    # U * (-νI) * V'
-    U .*= reshape(ν, 1, 1, :)
+    # U * diagm([1, 1, ν]) * V'
+    U[:,3,:] .*= reshape(ν, 1, :)
     batched_mul(U, batched_transpose(V)), rotation_pullback
 end
 
