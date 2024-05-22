@@ -3,11 +3,18 @@ uuid = "679ad0b4-c1ff-4e9f-b635-1f317683f6c9"
 authors = ["Kenta Sato <bicycle1885@gmail.com> and contributors"]
 version = "1.0.0-DEV"
 
+[deps]
+CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
+ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+NNlib = "872c559c-99b0-510c-b3b7-b6c96a88d5cd"
+
 [compat]
 julia = "1.6.7"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+ChainRulesTestUtils = "cdddcdb0-9152-4a09-a978-84456f9df70a"
 
 [targets]
-test = ["Test"]
+test = ["Test", "ChainRulesTestUtils"]
