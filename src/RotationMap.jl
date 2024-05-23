@@ -3,7 +3,7 @@ module RotationMap
 using ChainRulesCore: ChainRulesCore, unthunk
 using LinearAlgebra: svd, det
 using NNlib: batched_mul, batched_transpose
-using CUDA: CUDA
+using CUDA: CUDA, CUSOLVER
 
 checkdimension(A::AbstractArray) =
     size(A, 1) == 9 || throw(DimensionMismatch("The input array should have 9 rows"))
@@ -77,7 +77,7 @@ function batcheddet(A::AbstractArray{<: Union{Float32, Float64}, 3})
     out
 end
 
-function bachedsvd(A::CUDA.CuArray{<: Union{Float32, Float64}, 3})
+function batchedsvd(A::CUDA.CuArray{<: Union{Float32, Float64}, 3})
     @assert size(A, 1) == 3 && size(A, 2) == 3
     CUSOLVER.gesvdj!('V', copy(A))
 end
