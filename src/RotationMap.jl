@@ -56,7 +56,7 @@ Advances in Neural Information Processing Systems 33 (2020): 22554-22565.
 """
 function rotation(A::AbstractArray)
     checkdimension(A)
-    rotation(reshape(A, 9, :))
+    reshape(rotation(reshape(A, 9, :)), 3, 3, Base.tail(size(A))...)
 end
 
 function rotation(A::AbstractMatrix)
@@ -99,7 +99,15 @@ function ChainRulesCore.rrule(::typeof(rotation), A::AbstractMatrix)
     batched_mul(U, batched_transpose(V)), rotation_pullback
 end
 
-ChainRulesCore.rrule(::typeof(rotation), A::AbstractArray) = ChainRulesCore.rrule(rotation, A)
+function ChainRulesCore.rrule(::typeof(rotation), A::AbstractArray)
+    checkdimension(A)
+    R, pb = ChainRulesCore.rrule(rotation, reshape(A, 9, :))
+    function rotation_pullback(R̄)
+        t, ∂A = pb(reshape(R̄, 3, 3, :))
+        t, reshape(∂A, size(A))
+    end
+    reshape(R, 3, 3, Base.tail(size(A))...), rotation_pullback
+end
 
 # fallback for development
 function batchedsvd(A::AbstractArray{<: Union{Float32, Float64}, 3})
