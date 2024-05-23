@@ -8,20 +8,65 @@ using CUDA: CUDA, CUSOLVER
 checkdimension(A::AbstractArray) =
     size(A, 1) == 9 || throw(DimensionMismatch("The input array should have 9 rows"))
 
+"""
+    rotation(A::AbstractArray)
+
+Map 9-dimensional vectors to proper 3×3 rotation matrices.
+
+# Example
+
+```jldoctest
+julia> using Random
+
+julia> A = randn(Xoshiro(0), 9, 2)
+9×2 Matrix{Float64}:
+ -0.231909   -0.86473
+  0.94039    -0.269885
+  0.596762    0.578004
+  1.99782     1.16034
+ -0.0515618   0.287888
+  1.17224    -0.441193
+ -1.69681     0.134576
+ -2.11615     0.237598
+  0.558366    0.100588
+
+julia> using RotationMap: rotation
+
+julia> R = rotation(A)
+3×3×2 Array{Float64, 3}:
+[:, :, 1] =
+  0.42337    0.838204  -0.343761
+ -0.209441  -0.27861   -0.937289
+ -0.881415   0.468817   0.0575993
+
+[:, :, 2] =
+ -0.187231   0.981467  0.0408275
+ -0.411524  -0.116109  0.903973
+  0.89196    0.15245   0.425637
+
+julia> R[:,:,1]'R[:,:,1]
+3×3 Matrix{Float64}:
+  1.0          -1.11022e-16  -3.88578e-16
+ -1.11022e-16   1.0           9.71445e-17
+ -3.88578e-16   9.71445e-17   1.0
+```
+
+Levinson, Jake, et al. "An analysis of svd for deep rotation estimation."
+Advances in Neural Information Processing Systems 33 (2020): 22554-22565.
+"""
+function rotation(A::AbstractArray)
+    checkdimension(A)
+    rotation(reshape(A, 9, :))
+end
+
 function rotation(A::AbstractMatrix)
     checkdimension(A)
-    F = eltype(A)
     A = reshape(A, 3, 3, :)
     U, _, V = batchedsvd(A)
     ν = sign.(batcheddet(A))
     # U * diagm([1, 1, ν]) * V'
     U[:,3,:] .*= reshape(ν, 1, :)
     batched_mul(U, batched_transpose(V))
-end
-
-function rotation(A::AbstractArray)
-    checkdimension(A)
-    rotation(reshape(A, 9, :))
 end
 
 function ChainRulesCore.rrule(::typeof(rotation), A::AbstractMatrix)
