@@ -11,6 +11,8 @@ NNlib = "872c559c-99b0-510c-b3b7-b6c96a88d5cd"
 
 [compat]
 NNlib = "0.9"
+ChainRulesCore = "1"
+CUDA = "5"
 julia = "1.6.7"
 
 [extras]
