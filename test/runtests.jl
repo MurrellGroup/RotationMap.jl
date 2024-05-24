@@ -1,7 +1,6 @@
 using RotationMap: rotation
 using LinearAlgebra: det, I
 using ChainRulesTestUtils: test_rrule
-using CUDA
 using Test
 
 isrotation(R) = det(R) > 0 && R'R ≈ I
