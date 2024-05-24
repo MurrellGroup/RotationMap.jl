@@ -1,6 +1,6 @@
 # RotationMap
 
-[![Build Status](https://github.com/bicycle1885/RotationMap.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/bicycle1885/RotationMap.jl/actions/workflows/CI.yml?query=branch%3Amain)
+[![Build Status](https://github.com/MurrellGroup/RotationMap.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/MurrellGroup/RotationMap.jl/actions/workflows/CI.yml?query=branch%3Amain)
 
 
 This package implements the SVDO+ function, as described by Levinson, Jake, et
